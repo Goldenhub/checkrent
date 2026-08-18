@@ -25,24 +25,28 @@ function getRentOpacity(count: number): number {
 
 export default function HexLayer({ data }: HexLayerProps) {
   const { map } = useMap();
-  const sourceAdded = useRef(false);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   useEffect(() => {
-    if (!map || !data) return;
+    if (!map) return;
 
-    const addLayer = () => {
-      if (sourceAdded.current) {
-        try {
-          map.removeLayer("hex-fill");
-          map.removeLayer("hex-outline");
-          map.removeSource("hex-grid");
-        } catch {}
-        sourceAdded.current = false;
-      }
+    function cleanup() {
+      try {
+        if (map!.getLayer("hex-fill")) map!.removeLayer("hex-fill");
+        if (map!.getLayer("hex-outline")) map!.removeLayer("hex-outline");
+        if (map!.getSource("hex-grid")) map!.removeSource("hex-grid");
+      } catch {}
+    }
+
+    function addLayers() {
+      cleanup();
+      const d = dataRef.current;
+      if (!d || d.features.length === 0) return;
 
       const geojson: GeoJSON.FeatureCollection = {
         type: "FeatureCollection",
-        features: data.features.map((f) => ({
+        features: d.features.map((f) => ({
           type: "Feature",
           properties: {
             ...f.properties,
@@ -53,9 +57,8 @@ export default function HexLayer({ data }: HexLayerProps) {
         })),
       };
 
-      map.addSource("hex-grid", { type: "geojson", data: geojson });
-
-      map.addLayer({
+      map!.addSource("hex-grid", { type: "geojson", data: geojson });
+      map!.addLayer({
         id: "hex-fill",
         type: "fill",
         source: "hex-grid",
@@ -64,8 +67,7 @@ export default function HexLayer({ data }: HexLayerProps) {
           "fill-opacity": ["get", "opacity"],
         },
       });
-
-      map.addLayer({
+      map!.addLayer({
         id: "hex-outline",
         type: "line",
         source: "hex-grid",
@@ -75,26 +77,15 @@ export default function HexLayer({ data }: HexLayerProps) {
           "line-opacity": 0.4,
         },
       });
-
-      sourceAdded.current = true;
-    };
-
-    if (map.loaded()) {
-      addLayer();
-    } else {
-      map.on("load", addLayer);
     }
 
-    return () => {
-      if (sourceAdded.current) {
-        try {
-          if (map.getLayer("hex-fill")) map.removeLayer("hex-fill");
-          if (map.getLayer("hex-outline")) map.removeLayer("hex-outline");
-          if (map.getSource("hex-grid")) map.removeSource("hex-grid");
-          sourceAdded.current = false;
-        } catch {}
-      }
-    };
+    if (map.loaded()) {
+      addLayers();
+    } else {
+      map.once("load", addLayers);
+    }
+
+    return cleanup;
   }, [map, data]);
 
   return null;

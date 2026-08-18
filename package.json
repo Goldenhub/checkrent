@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "node -e \"const{cp,mkdirSync}=require('fs'),p=require('path').join('node_modules','maplibre-gl','dist'),d=require('path').join('public','maplibre');mkdirSync(d,{recursive:true});['maplibre-gl-worker.mjs','maplibre-gl-shared.mjs'].forEach(f=>cp(p+'/'+f,d+'/'+f))\"",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

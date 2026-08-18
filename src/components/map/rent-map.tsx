@@ -2,8 +2,9 @@
 
 import { useRef, useEffect, useCallback } from "react";
 import * as maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { useMap } from "./map-provider";
+
+maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 interface RentMapProps {
   initialCenter: [number, number];
@@ -12,13 +13,59 @@ interface RentMapProps {
   children?: React.ReactNode;
 }
 
-const DARK_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const MAP_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-voyager": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      maxzoom: 19,
+    },
+    "hex-grid": {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] },
+    },
+  },
+  layers: [
+    {
+      id: "carto-voyager-layer",
+      type: "raster",
+      source: "carto-voyager",
+    },
+    {
+      id: "hex-fill",
+      type: "fill",
+      source: "hex-grid",
+      paint: {
+        "fill-color": "#22d3ee",
+        "fill-opacity": 0.8,
+      },
+    },
+    {
+      id: "hex-outline",
+      type: "line",
+      source: "hex-grid",
+      paint: {
+        "line-color": "#ffffff",
+        "line-width": 2,
+        "line-opacity": 0.8,
+      },
+    },
+  ],
+};
 const FALLBACK_CENTER: [number, number] = [-74.006, 40.7128];
 
 export default function RentMap({ initialCenter, initialZoom = 12, onMapClick, children }: RentMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
+  const geolocatedRef = useRef(false);
   const { setMap } = useMap();
 
   const safeCenter: [number, number] =
@@ -57,7 +104,7 @@ export default function RentMap({ initialCenter, initialZoom = 12, onMapClick, c
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: DARK_STYLE,
+      style: MAP_STYLE,
       center: safeCenter,
       zoom: initialZoom,
       attributionControl: false,
@@ -79,6 +126,16 @@ export default function RentMap({ initialCenter, initialZoom = 12, onMapClick, c
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!mapInstance.current || geolocatedRef.current) return;
+    const current = mapInstance.current.getCenter();
+    if (current.lng !== safeCenter[0] || current.lat !== safeCenter[1]) {
+      geolocatedRef.current = true;
+      mapInstance.current.flyTo({ center: safeCenter, zoom: initialZoom, duration: 1500 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeCenter[0], safeCenter[1]]);
 
   return (
     <div ref={containerRef} className="h-full w-full">

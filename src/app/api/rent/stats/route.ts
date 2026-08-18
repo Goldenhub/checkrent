@@ -10,8 +10,8 @@ export async function GET(request: Request) {
       lat: searchParams.get("lat"),
       lng: searchParams.get("lng"),
       radius_km: searchParams.get("radius_km") ?? 1.5,
-      bedrooms: searchParams.get("bedrooms"),
-      property_type: searchParams.get("property_type"),
+      bedrooms: searchParams.get("bedrooms") ?? undefined,
+      property_type: searchParams.get("property_type") ?? undefined,
     });
 
     if (!parsed.success) {

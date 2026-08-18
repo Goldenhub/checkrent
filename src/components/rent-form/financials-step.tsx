@@ -14,7 +14,16 @@ interface FinancialsStepProps {
   onBack: () => void;
 }
 
-const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD"];
+const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "NGN"];
+
+const CURRENCY_LOCALE: Record<string, string> = {
+  USD: "en-US",
+  EUR: "de-DE",
+  GBP: "en-GB",
+  CAD: "en-CA",
+  AUD: "en-AU",
+  NGN: "en-NG",
+};
 
 export default function FinancialsStep({ amount, currency, frequency, onUpdate, onNext, onBack }: FinancialsStepProps) {
   const annualEquivalent = frequency === "monthly" ? amount * 12 : amount;
@@ -73,7 +82,7 @@ export default function FinancialsStep({ amount, currency, frequency, onUpdate, 
         <div className="rounded-md bg-zinc-800/50 p-3">
           <p className="text-xs text-zinc-500">Annual Equivalent</p>
           <p className="text-lg font-bold text-white">
-            {new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(annualEquivalent)}
+            {new Intl.NumberFormat(CURRENCY_LOCALE[currency] ?? undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(annualEquivalent)}
           </p>
         </div>
       )}
