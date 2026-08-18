@@ -26,7 +26,10 @@ function getRentOpacity(count: number): number {
 export default function HexLayer({ data }: HexLayerProps) {
   const { map } = useMap();
   const dataRef = useRef(data);
-  dataRef.current = data;
+
+  useEffect(() => {
+    dataRef.current = data;
+  });
 
   useEffect(() => {
     if (!map) return;

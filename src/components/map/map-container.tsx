@@ -22,7 +22,10 @@ export default function MapContainer() {
   const fetchedRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const filtersRef = useRef(filters);
-  filtersRef.current = filters;
+
+  useEffect(() => {
+    filtersRef.current = filters;
+  });
 
   const fetchH3Grid = useCallback(async () => {
     if (!map) return;

@@ -44,7 +44,7 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
       source: "hex-grid",
       paint: {
         "fill-color": "#22d3ee",
-        "fill-opacity": 0.8,
+        "fill-opacity": 0.5,
       },
     },
     {
@@ -54,7 +54,7 @@ const MAP_STYLE: maplibregl.StyleSpecification = {
       paint: {
         "line-color": "#ffffff",
         "line-width": 2,
-        "line-opacity": 0.8,
+        "line-opacity": 0.5,
       },
     },
   ],

@@ -62,14 +62,36 @@ export default function SearchBar() {
 
   return (
     <div ref={wrapperRef} className="relative w-full max-w-sm">
-      <input
-        type="text"
-        placeholder="Search address or city..."
-        value={query}
-        onChange={(e) => handleQueryChange(e.target.value)}
-        onFocus={() => results.length > 0 && setOpen(true)}
-        className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900/90 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-      />
+      <div className="relative flex items-center">
+        <input
+          type="text"
+          placeholder="Search address or city..."
+          value={query}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          onFocus={() => results.length > 0 && setOpen(true)}
+          className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900/90 pl-3 pr-10 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            if (!map) return;
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 14, duration: 1500 });
+              },
+              () => {},
+              { enableHighAccuracy: true }
+            );
+          }}
+          className="absolute right-2 flex h-6 w-6 items-center justify-center rounded-md text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-colors cursor-pointer"
+          title="Go to my location"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+          </svg>
+        </button>
+      </div>
       {open && results.length > 0 && (
         <div className="absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl">
           {results.map((feature) => (

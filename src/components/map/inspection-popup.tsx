@@ -69,59 +69,117 @@ export default function InspectionPopup({ lat, lng, stats, loading, onReport, on
   }
 
   return (
-    <Card className="w-80 bg-zinc-900/95 border-zinc-700 backdrop-blur-sm">
+    <Card className="w-80 bg-zinc-900/95 border-zinc-600 backdrop-blur-sm">
       <CardHeader className="p-3 pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-zinc-200">Area Rent Analysis</CardTitle>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-zinc-400 hover:text-white" onClick={onClose}>
+          <CardTitle className="text-sm font-medium text-zinc-100">Area Rent Analysis</CardTitle>
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-zinc-300 hover:text-white" onClick={onClose}>
             x
           </Button>
         </div>
         <div className="flex items-center gap-2 mt-1">
           <ConfidenceBadge level={stats.confidence} />
-          <span className="text-xs text-zinc-500">{stats.sample_count} samples</span>
+          <span className="text-xs text-zinc-400">{stats.sample_count} samples</span>
         </div>
       </CardHeader>
       <CardContent className="p-3 pt-0 space-y-3">
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-md bg-zinc-800/50 p-2">
-            <p className="text-xs text-zinc-500">Median</p>
+          <div className="rounded-md bg-zinc-800/60 p-2">
+            <p className="text-xs text-zinc-400">Median</p>
             <p className="text-lg font-bold text-white">{stats.median_rent ? formatCurrency(stats.median_rent) : "-"}</p>
           </div>
-          <div className="rounded-md bg-zinc-800/50 p-2">
-            <p className="text-xs text-zinc-500">Average</p>
-            <p className="text-lg font-bold text-zinc-200">{stats.avg_rent ? formatCurrency(stats.avg_rent) : "-"}</p>
+          <div className="rounded-md bg-zinc-800/60 p-2">
+            <p className="text-xs text-zinc-400">Average</p>
+            <p className="text-lg font-bold text-white">{stats.avg_rent ? formatCurrency(stats.avg_rent) : "-"}</p>
           </div>
         </div>
 
         <div className="flex justify-between text-sm">
-          <span className="text-zinc-500">Min</span>
-          <span className="text-zinc-300">{stats.min_rent ? formatCurrency(stats.min_rent) : "-"}</span>
+          <span className="text-zinc-400">Min</span>
+          <span className="text-zinc-100">{stats.min_rent ? formatCurrency(stats.min_rent) : "-"}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-zinc-500">Max</span>
-          <span className="text-zinc-300">{stats.max_rent ? formatCurrency(stats.max_rent) : "-"}</span>
+          <span className="text-zinc-400">Max</span>
+          <span className="text-zinc-100">{stats.max_rent ? formatCurrency(stats.max_rent) : "-"}</span>
         </div>
 
         {stats.idw_estimate && (
           <>
-            <Separator className="bg-zinc-800" />
+            <Separator className="bg-zinc-700" />
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-500">IDW Estimate</span>
+              <span className="text-zinc-400">IDW Estimate</span>
               <span className="text-cyan-400 font-medium">{formatCurrency(stats.idw_estimate)}</span>
             </div>
           </>
         )}
 
-        {stats.outliers_removed > 0 && (
-          <p className="text-xs text-zinc-500">{stats.outliers_removed} outlier{stats.outliers_removed > 1 ? "s" : ""} filtered</p>
+        {Object.keys(stats.breakdown_by_bedrooms).length > 0 && (
+          <>
+            <Separator className="bg-zinc-700" />
+            <div>
+              <p className="text-xs font-medium text-zinc-300 mb-1">By Bedrooms</p>
+              <div className="space-y-1.5">
+                {Object.entries(stats.breakdown_by_bedrooms)
+                  .sort(([a], [b]) => {
+                    const aNum = a === "3+" ? 4 : parseInt(a);
+                    const bNum = b === "3+" ? 4 : parseInt(b);
+                    return aNum - bNum;
+                  })
+                  .map(([br, data]) => (
+                    <div key={br} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-zinc-300 w-6">{br === "0" ? "Stu" : br === "3+" ? "3+" : br}</span>
+                        <div className="h-1.5 w-16 rounded-full bg-zinc-700/50 overflow-hidden">
+                          <div className="h-full rounded-full bg-cyan-400/70" style={{ width: `${Math.min(100, (data.count / stats.sample_count) * 100)}%` }} />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-zinc-400">{data.count}x</span>
+                        <span className="text-zinc-200 w-16 text-right">{formatCurrency(data.median_rent)}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </>
         )}
 
-        <Separator className="bg-zinc-800" />
+        {Object.keys(stats.breakdown_by_type).length > 0 && (
+          <>
+            <Separator className="bg-zinc-700" />
+            <div>
+              <p className="text-xs font-medium text-zinc-300 mb-1">By Type</p>
+              <div className="space-y-1.5">
+                {Object.entries(stats.breakdown_by_type)
+                  .sort(([, a], [, b]) => b.count - a.count)
+                  .map(([type, data]) => (
+                    <div key={type} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-zinc-300 whitespace-nowrap">{type.replace("_", " ")}</span>
+                        <div className="h-1.5 w-16 rounded-full bg-zinc-700/50 overflow-hidden">
+                          <div className="h-full rounded-full bg-cyan-400/70" style={{ width: `${Math.min(100, (data.count / stats.sample_count) * 100)}%` }} />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-zinc-400">{data.count}x</span>
+                        <span className="text-zinc-200 w-16 text-right">{formatCurrency(data.median_rent)}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </>
+        )}
 
-        <div className="flex justify-between text-xs text-zinc-600">
+        {stats.outliers_removed > 0 && (
+          <p className="text-xs text-zinc-400">{stats.outliers_removed} outlier{stats.outliers_removed > 1 ? "s" : ""} filtered</p>
+        )}
+
+        <Separator className="bg-zinc-700" />
+
+        <div className="flex justify-between text-xs text-zinc-500">
           <span>{lat.toFixed(4)}, {lng.toFixed(4)}</span>
-          <Button variant="ghost" size="sm" className="h-5 p-0 text-xs text-zinc-500 hover:text-red-400" onClick={() => onReport("")}>
+          <Button variant="ghost" size="sm" className="h-5 p-0 text-xs text-zinc-400 hover:text-red-400" onClick={() => onReport("")}>
             Report
           </Button>
         </div>

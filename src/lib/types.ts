@@ -33,6 +33,8 @@ export interface RentStats {
   filtered_count: number;
   original_count: number;
   outliers_removed: number;
+  breakdown_by_bedrooms: Record<string, { count: number; avg_rent: number; median_rent: number }>;
+  breakdown_by_type: Record<string, { count: number; avg_rent: number; median_rent: number }>;
 }
 
 export interface H3CellData {

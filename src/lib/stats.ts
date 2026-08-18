@@ -8,6 +8,8 @@ function getConfidence(count: number): ConfidenceLevel {
   return "none";
 }
 
+type BreakdownEntry = { count: number; avg_rent: number; median_rent: number };
+
 export async function getRentStats(
   lat: number,
   lng: number,
@@ -68,18 +70,72 @@ export async function getRentStats(
     FROM filtered f;
   `;
 
-  const { rows } = await query<{
-    original_count: number;
-    filtered_count: number;
-    min_rent: number | null;
-    max_rent: number | null;
-    avg_rent: number | null;
-    median_rent: number | null;
-  }>(sql, params);
+  const breakdownSql = `
+    SELECT
+      bedrooms,
+      property_type,
+      COUNT(*)::int AS count,
+      ROUND(AVG(annual_amount))::int AS avg_rent,
+      ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY annual_amount))::int AS median_rent
+    FROM rent_submissions
+    WHERE ST_DWithin(
+      geom::geography,
+      ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+      $3
+    )
+    AND NOT is_flagged
+    GROUP BY bedrooms, property_type
+    ORDER BY bedrooms, property_type;
+  `;
 
-  const row = rows[0];
+  const [statsResult, breakdownResult] = await Promise.all([
+    query<{
+      original_count: number;
+      filtered_count: number;
+      min_rent: number | null;
+      max_rent: number | null;
+      avg_rent: number | null;
+      median_rent: number | null;
+    }>(sql, params),
+    query<{
+      bedrooms: number;
+      property_type: string;
+      count: number;
+      avg_rent: number;
+      median_rent: number;
+    }>(breakdownSql, [lng, lat, radiusKm * 1000]),
+  ]);
+
+  const row = statsResult.rows[0];
   const count = row?.filtered_count ?? 0;
   const outliersRemoved = (row?.original_count ?? 0) - count;
+
+  const breakdownByBedrooms: Record<string, BreakdownEntry> = {};
+  const breakdownByType: Record<string, BreakdownEntry> = {};
+
+  for (const b of breakdownResult.rows) {
+    const brKey = b.bedrooms >= 3 ? "3+" : String(b.bedrooms);
+    if (!breakdownByBedrooms[brKey]) {
+      breakdownByBedrooms[brKey] = { count: 0, avg_rent: 0, median_rent: 0 };
+    }
+    breakdownByBedrooms[brKey].count += b.count;
+    breakdownByBedrooms[brKey].avg_rent += b.avg_rent * b.count;
+    breakdownByBedrooms[brKey].median_rent = b.median_rent;
+
+    if (!breakdownByType[b.property_type]) {
+      breakdownByType[b.property_type] = { count: 0, avg_rent: 0, median_rent: 0 };
+    }
+    breakdownByType[b.property_type].count += b.count;
+    breakdownByType[b.property_type].avg_rent += b.avg_rent * b.count;
+    breakdownByType[b.property_type].median_rent = b.median_rent;
+  }
+
+  for (const entry of Object.values(breakdownByBedrooms)) {
+    entry.avg_rent = Math.round(entry.avg_rent / entry.count);
+  }
+  for (const entry of Object.values(breakdownByType)) {
+    entry.avg_rent = Math.round(entry.avg_rent / entry.count);
+  }
 
   return {
     min_rent: row?.min_rent ? Math.round(row.min_rent) : null,
@@ -92,6 +148,8 @@ export async function getRentStats(
     filtered_count: count,
     original_count: row?.original_count ?? 0,
     outliers_removed: outliersRemoved,
+    breakdown_by_bedrooms: breakdownByBedrooms,
+    breakdown_by_type: breakdownByType,
   };
 }
 
