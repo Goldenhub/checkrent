@@ -2,17 +2,15 @@ import { Pool } from "pg";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
+  max: 5,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  idleTimeoutMillis: 10000,
   connectionTimeoutMillis: 5000,
 });
 
 export default pool;
 
-export async function query<T extends Record<string, unknown> = Record<string, unknown>>(
-  text: string,
-  params?: unknown[]
-): Promise<{ rows: T[]; rowCount: number | null }> {
+export async function query<T extends Record<string, unknown> = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: T[]; rowCount: number | null }> {
   const start = Date.now();
   const result = await pool.query(text, params);
   const duration = Date.now() - start;
