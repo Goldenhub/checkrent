@@ -7,6 +7,7 @@ import RentMap from "./rent-map";
 import SearchBar from "./search-bar";
 import FilterToolbar from "./filter-toolbar";
 import InspectionPopup from "./inspection-popup";
+import AboutPopover from "./about-popover";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import type { H3GridResponse, RentStats } from "@/lib/types";
 
@@ -100,6 +101,12 @@ export default function MapContainer() {
     }
   }, [map, h3Data]);
 
+  useEffect(() => {
+    if (!map || !fetchedRef.current) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchH3Grid(), 300);
+  }, [filters, map, fetchH3Grid]);
+
   const handleMapClick = useCallback(
     async (lng: number, lat: number) => {
       setClickPoint({ lat, lng });
@@ -148,11 +155,22 @@ export default function MapContainer() {
         onMapClick={handleMapClick}
       />
 
-      <div className="absolute top-4 left-4 z-10">
-        <SearchBar />
+      <div className="absolute top-0 left-0 right-0 z-10 flex flex-col gap-2 p-3 sm:p-4">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 sm:flex-none sm:w-80">
+            <SearchBar />
+          </div>
+          <div className="ml-auto flex items-center gap-2 rounded-lg bg-zinc-900/80 border border-zinc-700/50 px-3 py-2 backdrop-blur-sm">
+            <div className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="text-xs text-zinc-400 whitespace-nowrap">
+              {areaCount > 0 ? `${areaCount} areas` : "Loading..."}
+            </span>
+          </div>
+        </div>
+        <div className="overflow-x-auto scrollbar-none">
+          <FilterToolbar />
+        </div>
       </div>
-
-      <FilterToolbar />
 
       {clickPoint && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 sm:left-4 sm:translate-x-0 sm:bottom-4">
@@ -167,19 +185,8 @@ export default function MapContainer() {
         </div>
       )}
 
-      <div className="absolute top-4 right-4 z-10">
-        <div className="flex items-center gap-2 rounded-lg bg-zinc-900/80 border border-zinc-700/50 px-3 py-2 backdrop-blur-sm">
-          <div className="h-2 w-2 rounded-full bg-emerald-400" />
-          <span className="text-xs text-zinc-400">
-            {areaCount > 0 ? `${areaCount} areas` : "Loading..."}
-          </span>
-        </div>
-      </div>
-
-      <div className="absolute top-4 right-4 z-10 sm:hidden">
-        <div className="rounded-lg bg-zinc-900/80 border border-zinc-700/50 px-3 py-2 backdrop-blur-sm">
-          <p className="text-xs text-zinc-500">Click map to inspect</p>
-        </div>
+      <div className="fixed bottom-6 left-1/2 z-30 ml-28">
+        <AboutPopover />
       </div>
     </div>
   );
