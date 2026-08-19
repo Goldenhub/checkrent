@@ -15,8 +15,17 @@ interface InspectionPopupProps {
   onClose: () => void;
 }
 
+const CURRENCY_LOCALE: Record<string, string> = {
+  USD: "en-US",
+  EUR: "de-DE",
+  GBP: "en-GB",
+  CAD: "en-CA",
+  AUD: "en-AU",
+  NGN: "en-NG",
+};
+
 function formatCurrency(amount: number, currency: string = "USD"): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat(CURRENCY_LOCALE[currency] ?? undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
 }
 
 function ConfidenceBadge({ level }: { level: string }) {
