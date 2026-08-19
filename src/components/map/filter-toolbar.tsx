@@ -19,7 +19,7 @@ export default function FilterToolbar() {
   const hasFilters = filters.bedrooms !== null || filters.property_type !== null;
 
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-zinc-900/90 border border-zinc-700/50 px-3 py-2 backdrop-blur-sm w-fit">
+    <div className="flex items-center gap-2 rounded-xl bg-zinc-900/90 border border-zinc-700/50 px-3 py-2 backdrop-blur-sm w-fit" data-tour-id="filters">
       <div className="flex items-center gap-1">
         <span className="text-xs text-zinc-500 mr-1">BR</span>
         {BEDROOM_OPTIONS.map((br) => (

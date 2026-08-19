@@ -148,7 +148,7 @@ export default function MapContainer() {
   }, []);
 
   return (
-    <div className="relative h-full w-full">
+      <div className="relative h-full w-full" data-tour-id="map">
       <RentMap
         initialCenter={[center.lng, center.lat]}
         initialZoom={12}
@@ -160,7 +160,7 @@ export default function MapContainer() {
           <div className="flex-1 sm:flex-none sm:w-80">
             <SearchBar />
           </div>
-          <div className="ml-auto flex items-center gap-2 rounded-lg bg-zinc-900/80 border border-zinc-700/50 px-3 py-2 backdrop-blur-sm">
+          <div className="ml-auto flex items-center gap-2 rounded-lg bg-zinc-900/80 border border-zinc-700/50 px-3 py-2 backdrop-blur-sm" data-tour-id="area-count">
             <div className="h-2 w-2 rounded-full bg-emerald-400" />
             <span className="text-xs text-zinc-400 whitespace-nowrap">
               {areaCount > 0 ? `${areaCount} areas` : "Loading..."}

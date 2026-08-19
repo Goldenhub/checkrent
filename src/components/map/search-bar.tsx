@@ -61,10 +61,10 @@ export default function SearchBar() {
   );
 
   return (
-    <div ref={wrapperRef} className="relative w-full max-w-sm">
+    <div ref={wrapperRef} className="relative w-full max-w-sm" data-tour-id="search">
       <div className="flex items-center gap-2">
         <input
-          type="text"
+          type="search"
           placeholder="Search address or city..."
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}

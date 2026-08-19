@@ -20,6 +20,11 @@ const FormSheet = dynamic(() => import("@/components/rent-form/form-sheet"), {
   ssr: false,
 });
 
+const OnboardingTour = dynamic(
+  () => import("@/components/onboarding/onboarding-tour"),
+  { ssr: false }
+);
+
 export default function Home() {
   return (
     <main className="h-screen w-screen overflow-hidden">
@@ -27,6 +32,7 @@ export default function Home() {
         <MapProvider>
           <MapContainer />
           <FormSheet />
+          <OnboardingTour />
         </MapProvider>
       </MapFiltersProvider>
     </main>
