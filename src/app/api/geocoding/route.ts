@@ -51,18 +51,29 @@ export async function GET(request: NextRequest) {
     params.set("addressdetails", "1");
   }
 
-  const res = await fetch(`${NOMINATIM_URL}/${action}?${params}`, {
-    headers: { "User-Agent": "checkRent/1.0" },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${NOMINATIM_URL}/${action}?${params}`, {
+      headers: { "User-Agent": "checkRent/1.0" },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    return NextResponse.json({ error: "Geocoding service unreachable" }, { status: 502 });
+  }
 
   if (!res.ok) {
     return NextResponse.json({ error: "Nominatim error" }, { status: 502 });
   }
 
-  const data = await res.json();
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid response from geocoding service" }, { status: 502 });
+  }
 
   if (action === "search") {
-    const features = data.map((item: Record<string, unknown>) => ({
+    const features = (data as Record<string, unknown>[]).map((item) => ({
       id: String(item.place_id),
       place_name: item.display_name,
       center: [parseFloat(String(item.lon)), parseFloat(String(item.lat))],
@@ -72,11 +83,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(features);
   }
 
+  const single = data as Record<string, unknown>;
   return NextResponse.json({
-    id: String(data.place_id),
-    place_name: data.display_name,
-    center: [parseFloat(String(data.lon)), parseFloat(String(data.lat))],
-    properties: data.address ?? {},
-    context: extractContext(data),
+    id: String(single.place_id),
+    place_name: single.display_name,
+    center: [parseFloat(String(single.lon)), parseFloat(String(single.lat))],
+    properties: single.address ?? {},
+    context: extractContext(single),
   });
 }

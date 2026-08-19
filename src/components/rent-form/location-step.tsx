@@ -31,7 +31,8 @@ export default function LocationStep({ lat, lng, city, neighborhood, formatted_a
         const address = feature?.place_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         const cityFromCtx = feature?.context?.find((c) => c.id.startsWith("place"))?.text || "";
         const neighborhoodFromCtx = feature?.context?.find((c) => c.id.startsWith("neighborhood"))?.text || "";
-        onUpdate({ lat, lng, city: cityFromCtx, neighborhood: neighborhoodFromCtx, formatted_address: address });
+        const resolvedCity = cityFromCtx || address.split(",")[0]?.trim() || "";
+        onUpdate({ lat, lng, city: resolvedCity, neighborhood: neighborhoodFromCtx, formatted_address: address });
         setLoadingLocation(false);
       },
       () => {
@@ -56,14 +57,15 @@ export default function LocationStep({ lat, lng, city, neighborhood, formatted_a
       const [lng, lat] = feature.center;
       const cityFromCtx = feature.context?.find((c) => c.id.startsWith("place"))?.text || "";
       const neighborhoodFromCtx = feature.context?.find((c) => c.id.startsWith("neighborhood"))?.text || "";
-      onUpdate({ lat, lng, city: cityFromCtx, neighborhood: neighborhoodFromCtx, formatted_address: feature.place_name });
+      const resolvedCity = cityFromCtx || feature.place_name.split(",")[0]?.trim() || "";
+      onUpdate({ lat, lng, city: resolvedCity, neighborhood: neighborhoodFromCtx, formatted_address: feature.place_name });
       setSearchQuery(feature.place_name);
       setSuggestions([]);
     },
     [onUpdate]
   );
 
-  const canProceed = lat !== null && lng !== null && city.length > 0;
+  const canProceed = lat !== null && lng !== null;
 
   return (
     <div className="space-y-4">
