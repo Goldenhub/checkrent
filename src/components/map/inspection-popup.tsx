@@ -15,8 +15,8 @@ interface InspectionPopupProps {
   onClose: () => void;
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+function formatCurrency(amount: number, currency: string = "USD"): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
 }
 
 function ConfidenceBadge({ level }: { level: string }) {
@@ -86,21 +86,21 @@ export default function InspectionPopup({ lat, lng, stats, loading, onReport, on
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-md bg-zinc-800/60 p-2">
             <p className="text-xs text-zinc-400">Median</p>
-            <p className="text-lg font-bold text-white">{stats.median_rent ? formatCurrency(stats.median_rent) : "-"}</p>
+            <p className="text-lg font-bold text-white">{stats.median_rent ? formatCurrency(stats.median_rent, stats.currency) : "-"}</p>
           </div>
           <div className="rounded-md bg-zinc-800/60 p-2">
             <p className="text-xs text-zinc-400">Average</p>
-            <p className="text-lg font-bold text-white">{stats.avg_rent ? formatCurrency(stats.avg_rent) : "-"}</p>
+            <p className="text-lg font-bold text-white">{stats.avg_rent ? formatCurrency(stats.avg_rent, stats.currency) : "-"}</p>
           </div>
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-zinc-400">Min</span>
-          <span className="text-zinc-100">{stats.min_rent ? formatCurrency(stats.min_rent) : "-"}</span>
+          <span className="text-zinc-100">{stats.min_rent ? formatCurrency(stats.min_rent, stats.currency) : "-"}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-zinc-400">Max</span>
-          <span className="text-zinc-100">{stats.max_rent ? formatCurrency(stats.max_rent) : "-"}</span>
+          <span className="text-zinc-100">{stats.max_rent ? formatCurrency(stats.max_rent, stats.currency) : "-"}</span>
         </div>
 
         {stats.idw_estimate && (
@@ -108,7 +108,7 @@ export default function InspectionPopup({ lat, lng, stats, loading, onReport, on
             <Separator className="bg-zinc-700" />
             <div className="flex justify-between text-sm">
               <span className="text-zinc-400">IDW Estimate</span>
-              <span className="text-cyan-400 font-medium">{formatCurrency(stats.idw_estimate)}</span>
+              <span className="text-cyan-400 font-medium">{formatCurrency(stats.idw_estimate, stats.currency)}</span>
             </div>
           </>
         )}
@@ -135,7 +135,7 @@ export default function InspectionPopup({ lat, lng, stats, loading, onReport, on
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-zinc-400">{data.count}x</span>
-                        <span className="text-zinc-200 w-16 text-right">{formatCurrency(data.median_rent)}</span>
+                        <span className="text-zinc-200 w-16 text-right">{formatCurrency(data.median_rent, stats.currency)}</span>
                       </div>
                     </div>
                   ))}
@@ -162,7 +162,7 @@ export default function InspectionPopup({ lat, lng, stats, loading, onReport, on
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-zinc-400">{data.count}x</span>
-                        <span className="text-zinc-200 w-16 text-right">{formatCurrency(data.median_rent)}</span>
+                        <span className="text-zinc-200 w-16 text-right">{formatCurrency(data.median_rent, stats.currency)}</span>
                       </div>
                     </div>
                   ))}

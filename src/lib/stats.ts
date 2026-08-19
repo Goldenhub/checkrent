@@ -70,6 +70,20 @@ export async function getRentStats(
     FROM filtered f;
   `;
 
+  const currencySql = `
+    SELECT currency, COUNT(*)::int AS cnt
+    FROM rent_submissions
+    WHERE ST_DWithin(
+      geom::geography,
+      ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+      $3
+    )
+    AND NOT is_flagged
+    GROUP BY currency
+    ORDER BY cnt DESC
+    LIMIT 1;
+  `;
+
   const breakdownSql = `
     SELECT
       bedrooms,
@@ -88,7 +102,7 @@ export async function getRentStats(
     ORDER BY bedrooms, property_type;
   `;
 
-  const [statsResult, breakdownResult] = await Promise.all([
+  const [statsResult, breakdownResult, currencyResult] = await Promise.all([
     query<{
       original_count: number;
       filtered_count: number;
@@ -104,6 +118,7 @@ export async function getRentStats(
       avg_rent: number;
       median_rent: number;
     }>(breakdownSql, [lng, lat, radiusKm * 1000]),
+    query<{ currency: string; cnt: number }>(currencySql, [lng, lat, radiusKm * 1000]),
   ]);
 
   const row = statsResult.rows[0];
@@ -142,6 +157,7 @@ export async function getRentStats(
     max_rent: row?.max_rent ? Math.round(row.max_rent) : null,
     avg_rent: row?.avg_rent ? Math.round(row.avg_rent) : null,
     median_rent: row?.median_rent ? Math.round(row.median_rent) : null,
+    currency: currencyResult.rows[0]?.currency ?? "USD",
     sample_count: count,
     confidence: getConfidence(count),
     idw_estimate: null,

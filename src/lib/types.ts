@@ -27,6 +27,7 @@ export interface RentStats {
   max_rent: number | null;
   avg_rent: number | null;
   median_rent: number | null;
+  currency: string;
   sample_count: number;
   confidence: ConfidenceLevel;
   idw_estimate: number | null;
